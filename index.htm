@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poema Animado</title>
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  background: #1b003b;
+}
+#backgroundCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+.container {
+  position: relative;
+  z-index: 2;
+  max-width: 320px;
+  width: 90%;
+  margin: 0 auto;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+  color: #fff;
+  padding: 25px 20px;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("IMG_0273.JPG") no-repeat center/cover;
+  opacity: 0.3;
+  z-index: 0;
+}
+#containerCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+#poema {
+  position: relative;
+  z-index: 2;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.verse {
+  position: absolute;
+  font-size: 1.5em;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+  text-shadow: 0 0 5px #fff, 0 0 10px #ff9a9e;
+  animation: glow 1.5s infinite alternate;
+}
+.verse.active {
+  opacity: 1;
+}
+@keyframes glow {
+  from { text-shadow: 0 0 5px #fff, 0 0 10px #ff9a9e; }
+  to   { text-shadow: 0 0 10px #fff, 0 0 20px #ff9a9e; }
+}
+audio {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 280px;
+  z-index: 3;
+  position: relative;
+}
+</style>
+</head>
+<body>
+<canvas id="backgroundCanvas"></canvas>
+<div class="container">
+  <canvas id="containerCanvas"></canvas>
+  <div id="poema">
+    <div class="verse">Nós nos encontramos</div>
+    <div class="verse">Eu te ajudei a sair de um lugar destruído</div>
+    <div class="verse">Você me deu conforto</div>
+    <div class="verse">Mas me apaixonar por você foi meu erro</div>
+    <div class="verse">Eu te coloquei no topo, eu te coloquei no topo</div>
+    <div class="verse">Eu te assumi tão orgulhoso e abertamente</div>
+    <div class="verse">E quando os tempos foram difíceis, quando os tempos foram difíceis</div>
+    <div class="verse">Eu me certifiquei de te manter perto de mim</div>
+    <div class="verse">Então chame meu nome (chame meu nome)</div>
+    <div class="verse">Chame meu nome quando eu te beijar, tão gentilmente</div>
+    <div class="verse">Eu quero que você fique (quero que você fique)</div>
+    <div class="verse">Eu quero que você fique, mesmo que você não me queira</div>
+    <div class="verse">Garota, por que você não pode esperar?</div>
+    <div class="verse">Garota, por que você não pode esperar até eu me desapaixonar?</div>
+    <div class="verse">Você não vai chamar meu nome? (Chame meu nome)</div>
+    <div class="verse">Garota, chame meu nome e eu estarei a caminho e</div>
+    <div class="verse">Eu disse que não sentia nada, amor, mas eu menti</div>
+    <div class="verse">Eu quase cortei um pedaço de mim para que você vivesse</div>
+    <div class="verse">Acho que eu era apenas outro passatempo</div>
+    <div class="verse">Até você se decidir</div>
+    <div class="verse">Você só desperdiçou meu tempo</div>
+    <div class="verse">Você está no topo, eu te coloquei no topo</div>
+    <div class="verse">Eu te assumi tão orgulhoso e abertamente, amor</div>
+    <div class="verse">E quando os tempos foram difíceis, quando os tempos foram difíceis</div>
+    <div class="verse">Eu me certifiquei de te manter perto de mim</div>
+    <div class="verse">Então chame meu nome (chame meu nome, amor)</div>
+    <div class="verse">Então chame meu nome quando eu te beijar tão gentilmente</div>
+    <div class="verse">Eu quero que você fique (quero que você fique)</div>
+    <div class="verse">Eu quero que você fique mesmo que você não me queira</div>
+    <div class="verse">Garota, por que você não pode esperar?</div>
+    <div class="verse">Garota, por que você não pode esperar até eu me desapaixonar?</div>
+    <div class="verse">Amor, chame meu nome</div>
+    <div class="verse">Apenas chame meu nome e eu estarei a caminho</div>
+  </div>
+  <audio controls>
+    <source src="https://www.dropbox.com/scl/fi/39tsy0sgtoqe7s4fl3iau/The-Weeknd-Call-Out-My-Name-Official-Video.mp3?rlkey=1pt73c26pzc5c8igqvtxh4ec8&st=4mxoekp7&dl=1" type="audio/mpeg">
+    Seu navegador não suporta o elemento de áudio.
+  </audio>
+</div>
+
+<script>
+  const verses = document.querySelectorAll('.verse');
+  const audio = document.querySelector('audio');
+  
+  // --- Mapeamento: tempo em segundos -> índice do verso ---
+  // (esses valores são aproximados, você pode ajustar milissegundos se quiser mais precisão)
+  const verseTimings = [
+    { time: 14, index: 0 },
+    { time: 20, index: 1 },
+    { time: 25, index: 2 },
+    { time: 29, index: 3 },
+    { time: 35, index: 4 },
+    { time: 40, index: 5 },
+    { time: 45, index: 6 },
+    { time: 51, index: 7 },
+    { time: 57, index: 8 },
+    { time: 62, index: 9 },
+    { time: 68, index: 10 },
+    { time: 73, index: 11 },
+    { time: 78, index: 12 },
+    { time: 84, index: 13 },
+    { time: 89, index: 14 },
+    { time: 94, index: 15 },
+    { time: 103, index: 16 },
+    { time: 109, index: 17 },
+    { time: 114, index: 18 },
+    { time: 117, index: 19 },
+    { time: 119, index: 20 },
+    { time: 122, index: 21 },
+    { time: 127, index: 22 },
+    { time: 132, index: 23 },
+    { time: 138, index: 24 },
+    { time: 142, index: 25 },
+    { time: 148, index: 26 }, 
+    { time: 153, index: 27 },
+    { time: 159, index: 28 },
+    { time: 164, index: 29 },
+    { time: 170, index: 30 },
+    { time: 176, index: 31 },
+  ];
+  
+  let currentIndex = -1;
+  
+  function showVerse(i) {
+    verses.forEach(v => v.classList.remove('active'));
+    if (verses[i]) {
+      verses[i].classList.add('active');
+    }
+  }
+  
+  // --- Atualiza conforme a música toca ---
+  audio.addEventListener('timeupdate', () => {
+    const currentTime = audio.currentTime;
+  
+    for (let i = verseTimings.length - 1; i >= 0; i--) {
+      if (currentTime >= verseTimings[i].time) {
+        if (currentIndex !== verseTimings[i].index) {
+          currentIndex = verseTimings[i].index;
+          showVerse(currentIndex);
+        }
+        break;
+      }
+    }
+  });
+ 
+  
+
+// Para os versos quando a música é pausada
+audio.addEventListener('pause', () => {
+  clearInterval(verseInterval);
+});
+
+// --- Canvas de fundo ---
+const bgCanvas = document.getElementById('backgroundCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+let width = bgCanvas.width = window.innerWidth;
+let height = bgCanvas.height = window.innerHeight;
+const hearts = [];
+const stars = [];
+const heartCount = 40;
+const starCount = 50;
+
+function drawHeart(ctx,x,y,size,color){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.scale(size,size);
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.bezierCurveTo(0,-3,-5,-3,-5,0);
+  ctx.bezierCurveTo(-5,3,0,5,0,7);
+  ctx.bezierCurveTo(0,5,5,3,5,0);
+  ctx.bezierCurveTo(5,-3,0,-3,0,0);
+  ctx.fillStyle=color;
+  ctx.fill();
+  ctx.restore();
+}
+
+function Heart(){
+  this.x = Math.random()*width;
+  this.y = Math.random()*height;
+  this.size = Math.random()*1.2 + 0.8;
+  this.sx = (Math.random()-0.5)*0.5;
+  this.sy = (Math.random()-0.5)*0.5;
+  this.color = `rgba(${Math.floor(200+Math.random()*55)},${Math.floor(50+Math.random()*50)},${Math.floor(50+Math.random()*50)},0.8)`;
+}
+Heart.prototype.update = function(ctx){
+  this.x += this.sx;
+  this.y += this.sy;
+  if(this.x<0) this.x=width;
+  if(this.x>width) this.x=0;
+  if(this.y<0) this.y=height;
+  if(this.y>height) this.y=0;
+  drawHeart(ctx,this.x,this.y,this.size,this.color);
+}
+
+function Star(){
+  this.x = Math.random()*width;
+  this.y = Math.random()*height;
+  this.radius = Math.random()*1.5+0.5;
+  this.opacity = Math.random()*0.8+0.2;
+  this.twinkle = Math.random()*0.02+0.01;
+}
+Star.prototype.update = function(ctx){
+  this.opacity += (Math.random()<0.5 ? -this.twinkle : this.twinkle);
+  if(this.opacity<0) this.opacity=0;
+  if(this.opacity>1) this.opacity=1;
+  ctx.beginPath();
+  ctx.arc(this.x,this.y,this.radius,0,Math.PI*2);
+  ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+  ctx.fill();
+}
+
+for(let i=0;i<heartCount;i++) hearts.push(new Heart());
+for(let i=0;i<starCount;i++) stars.push(new Star());
+
+function animateBg(){
+  bgCtx.clearRect(0,0,width,height);
+  hearts.forEach(h=>h.update(bgCtx));
+  stars.forEach(s=>s.update(bgCtx));
+  requestAnimationFrame(animateBg);
+}
+animateBg();
+
+// --- Canvas do container ---
+const containerCanvas = document.getElementById('containerCanvas');
+const containerCtx = containerCanvas.getContext('2d');
+function resizeContainerCanvas(){
+  containerCanvas.width = containerCanvas.offsetWidth;
+  containerCanvas.height = containerCanvas.offsetHeight;
+}
+resizeContainerCanvas();
+
+const innerHearts = [];
+const innerStars = [];
+const innerHeartCount = 15;
+const innerStarCount = 20;
+
+for(let i=0;i<innerHeartCount;i++) innerHearts.push(new Heart());
+for(let i=0;i<innerStarCount;i++) innerStars.push(new Star());
+
+function animateContainer(){
+  containerCtx.clearRect(0,0,containerCanvas.width,containerCanvas.height);
+  innerHearts.forEach(h=>{
+    h.x += h.sx;
+    h.y += h.sy;
+    if(h.x<0) h.x=containerCanvas.width;
+    if(h.x>containerCanvas.width) h.x=0;
+    if(h.y<0) h.y=containerCanvas.height;
+    if(h.y>containerCanvas.height) h.y=0;
+    drawHeart(containerCtx,h.x,h.y,h.size,h.color);
+  });
+  innerStars.forEach(s=>{
+    s.opacity += (Math.random()<0.5 ? -s.twinkle : s.twinkle);
+    if(s.opacity<0) s.opacity=0;
+    if(s.opacity>1) s.opacity=1;
+    containerCtx.beginPath();
+    containerCtx.arc(s.x,s.y,s.radius,0,Math.PI*2);
+    containerCtx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+    containerCtx.fill();
+  });
+  requestAnimationFrame(animateContainer);
+}
+animateContainer();
+
+window.addEventListener('resize', ()=>{
+  width = bgCanvas.width = window.innerWidth;
+  height = bgCanvas.height = window.innerHeight;
+  resizeContainerCanvas();
+});
+</script>
+</body>
+</html>
